@@ -1,0 +1,91 @@
+.datasets-container {
+  max-width: 100%;
+}
+
+.process-card {
+  margin-bottom: 24px;
+}
+
+.process-card.collapsed {
+  display: none;
+}
+
+.process-steps {
+  padding: 16px 0;
+}
+
+.process-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  padding: 0 16px;
+}
+
+.step-arrow {
+  position: absolute;
+  left: -24px;
+  top: 30px;
+  font-size: 24px;
+  color: #1890ff;
+  font-weight: bold;
+}
+
+.process-step:first-child .step-arrow {
+  display: none;
+}
+
+.step-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+}
+
+.step-icon svg {
+  font-size: 28px;
+  color: #fff;
+}
+
+.step-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.step-description {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.6;
+}
+
+.datasets-list-card {
+  margin-top: 0;
+}
+
+.datasets-toolbar {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: #fafafa;
+  border-radius: 6px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .step-arrow {
+    display: none;
+  }
+
+  .process-step {
+    margin-bottom: 24px;
+  }
+}
+
+

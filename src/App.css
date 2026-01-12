@@ -1,0 +1,54 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* 页面级过渡动画：路由切换时轻微淡入上移，提升整体丝滑感 */
+.page-container {
+  animation: page-fade-in-up 0.22s ease-out;
+}
+
+@keyframes page-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 常用卡片统一的悬浮动效：轻微上移 + 阴影 */
+.card-elevated {
+  transition: transform 0.18s ease-out, box-shadow 0.18s ease-out,
+    border-color 0.18s ease-out;
+}
+
+.card-elevated:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  border-color: rgba(22, 119, 255, 0.25);
+}
+
+/* 表格行交互优化：行悬浮 & 选中态更柔和 */
+.table-row-hover {
+  transition: background-color 0.16s ease-out, transform 0.12s ease-out;
+}
+
+.table-row-hover:hover {
+  background-color: rgba(22, 119, 255, 0.04);
+}

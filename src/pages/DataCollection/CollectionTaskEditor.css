@@ -1,0 +1,253 @@
+.task-editor-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #f5f5f5;
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-right {
+  display: flex;
+  gap: 12px;
+}
+
+.editor-content-wrapper {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  flex-direction: column;
+}
+
+.flow-container {
+  flex: 1;
+  position: relative;
+  background: #fafafa;
+}
+
+.react-flow-container {
+  width: 100%;
+  height: 100%;
+}
+
+.custom-node {
+  background: #fff;
+  border: 2px solid #d9d9d9;
+  border-radius: 8px;
+  min-width: 180px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
+}
+
+.custom-node:hover {
+  border-color: #1890ff;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.2);
+}
+
+.node-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 6px 6px 0 0;
+}
+
+.node-title {
+  font-weight: 500;
+  font-size: 14px;
+  color: #333;
+}
+
+.node-content {
+  padding: 12px 16px;
+  position: relative;
+}
+
+.node-info {
+  margin-top: 8px;
+}
+
+.node-input,
+.node-output {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.start-node .node-header {
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+}
+
+.start-node .node-title {
+  color: #fff;
+}
+
+.end-node .node-header {
+  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+}
+
+.end-node .node-title {
+  color: #fff;
+}
+
+.data-source-node .node-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.data-source-node .node-title {
+  color: #fff;
+}
+
+.crawler-node .node-header {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.crawler-node .node-title {
+  color: #fff;
+}
+
+.processor-node .node-header {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.processor-node .node-title {
+  color: #fff;
+}
+
+.condition-node .node-header {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.condition-node .node-title {
+  color: #333;
+}
+
+.storage-node .node-header {
+  background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+}
+
+.storage-node .node-title {
+  color: #fff;
+}
+
+.transform-node .node-header {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+}
+
+.filter-node .node-header {
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+}
+
+.editor-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  background: #fff;
+  border-top: 1px solid #e8e8e8;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
+.footer-left,
+.footer-center,
+.footer-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* React Flow 自定义样式 */
+.react-flow__handle {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #1890ff;
+  border: 2px solid #fff;
+}
+
+.react-flow__handle-left {
+  left: -6px;
+}
+
+.react-flow__handle-right {
+  right: -6px;
+}
+
+.react-flow__edge-path {
+  stroke: #1890ff;
+  stroke-width: 2;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #0050b3;
+  stroke-width: 3;
+}
+
+/* 节点面板Popover样式 */
+.node-panel-popover {
+  width: 280px;
+  max-height: 400px;
+}
+
+.node-panel-popover-content {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.node-category-popover {
+  margin-bottom: 16px;
+}
+
+.node-category-popover:last-child {
+  margin-bottom: 0;
+}
+
+.node-item-popover {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  cursor: grab;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  transition: all 0.2s;
+  background: #fafafa;
+}
+
+.node-item-popover:hover {
+  border-color: #1890ff;
+  background: #e6f7ff;
+  transform: translateX(4px);
+}
+
+.node-item-popover:active {
+  cursor: grabbing;
+}
+
+.node-item-icon {
+  font-size: 14px;
+  margin-right: 8px;
+  color: #1890ff;
+}
+
+.node-item-label {
+  font-size: 13px;
+  color: #333;
+}

@@ -1,0 +1,60 @@
+.annotation-scenarios {
+  padding: 24px;
+}
+
+.scenario-card {
+  height: 100%;
+}
+
+.scenario-cover {
+  height: 200px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.scenario-preview {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.preview-placeholder {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 18px;
+  font-weight: 500;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.scenario-card .ant-card-actions {
+  border-top: 1px solid #f0f0f0;
+}
+
+.scenario-card .ant-card-actions > li {
+  margin: 12px 0;
+}
+
+.scenario-card .ant-card-actions > li > span {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
