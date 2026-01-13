@@ -2,7 +2,8 @@ import jwt, { type SignOptions, type Secret } from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 
 const JWT_SECRET: Secret = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+// Ensure expiresIn matches jsonwebtoken type expectations (number | StringValue)
+const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || '7d') as SignOptions['expiresIn'];
 
 export interface JWTPayload {
   userId: string;
@@ -42,7 +43,3 @@ export function hashPassword(password: string): string {
 export function comparePassword(password: string, hash: string): boolean {
   return bcrypt.compareSync(password, hash);
 }
-
-
-
-
