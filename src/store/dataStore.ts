@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { dataSourceApi, collectionTaskApi, datasetApi } from './dataStore.api';
 
 export interface DataSource {
   id: string;
@@ -247,96 +248,161 @@ const mockDatasets: Dataset[] = [
   },
 ];
 
-export const useDataStore = create<DataState>((set) => ({
-  dataSources: mockDataSources,
-  collectionTasks: mockCollectionTasks,
-  datasets: mockDatasets,
-  addDataSource: (source) => {
-    const newSource: DataSource = {
-      ...source,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-    };
-    set((state) => ({
-      dataSources: [...state.dataSources, newSource],
-    }));
+export const useDataStore = create<DataState>((set, get) => ({
+  dataSources: [],
+  collectionTasks: [],
+  datasets: [],
+  loading: false,
+  error: null,
+  
+  // 数据源
+  loadDataSources: async () => {
+    set({ loading: true, error: null });
+    try {
+      const data = await dataSourceApi.getAll();
+      set({ dataSources: data, loading: false });
+    } catch (error: any) {
+      set({ error: error.message || '加载数据源失败', loading: false });
+    }
   },
-  updateDataSource: (id, source) => {
-    set((state) => ({
-      dataSources: state.dataSources.map((s) =>
-        s.id === id ? { ...s, ...source } : s
-      ),
-    }));
+  addDataSource: async (source) => {
+    try {
+      const newSource = await dataSourceApi.create(source);
+      set((state) => ({
+        dataSources: [...state.dataSources, newSource],
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '创建数据源失败' });
+      throw error;
+    }
   },
-  deleteDataSource: (id) => {
-    set((state) => ({
-      dataSources: state.dataSources.filter((s) => s.id !== id),
-    }));
+  updateDataSource: async (id, source) => {
+    try {
+      const updated = await dataSourceApi.update(id, source);
+      set((state) => ({
+        dataSources: state.dataSources.map((s) => (s.id === id ? updated : s)),
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '更新数据源失败' });
+      throw error;
+    }
   },
-  addCollectionTask: (task) => {
-    const newTask: CollectionTask = {
-      ...task,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    set((state) => ({
-      collectionTasks: [...state.collectionTasks, newTask],
-    }));
+  deleteDataSource: async (id) => {
+    try {
+      await dataSourceApi.delete(id);
+      set((state) => ({
+        dataSources: state.dataSources.filter((s) => s.id !== id),
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '删除数据源失败' });
+      throw error;
+    }
   },
-  updateCollectionTask: (id, task) => {
-    set((state) => ({
-      collectionTasks: state.collectionTasks.map((t) =>
-        t.id === id
-          ? { ...t, ...task, updatedAt: new Date().toISOString() }
-          : t
-      ),
-    }));
+  
+  // 采集任务
+  loadCollectionTasks: async () => {
+    set({ loading: true, error: null });
+    try {
+      const data = await collectionTaskApi.getAll();
+      set({ collectionTasks: data, loading: false });
+    } catch (error: any) {
+      set({ error: error.message || '加载采集任务失败', loading: false });
+    }
   },
-  deleteCollectionTask: (id) => {
-    set((state) => ({
-      collectionTasks: state.collectionTasks.filter((t) => t.id !== id),
-    }));
+  addCollectionTask: async (task) => {
+    try {
+      const newTask = await collectionTaskApi.create(task);
+      set((state) => ({
+        collectionTasks: [...state.collectionTasks, newTask],
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '创建采集任务失败' });
+      throw error;
+    }
   },
-  addDataset: (dataset) => {
-    const newDataset: Dataset = {
-      ...dataset,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    set((state) => ({
-      datasets: [...state.datasets, newDataset],
-    }));
+  updateCollectionTask: async (id, task) => {
+    try {
+      const updated = await collectionTaskApi.update(id, task);
+      set((state) => ({
+        collectionTasks: state.collectionTasks.map((t) => (t.id === id ? updated : t)),
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '更新采集任务失败' });
+      throw error;
+    }
   },
-  updateDataset: (id, dataset) => {
-    set((state) => ({
-      datasets: state.datasets.map((d) =>
-        d.id === id
-          ? { ...d, ...dataset, updatedAt: new Date().toISOString() }
-          : d
-      ),
-    }));
+  deleteCollectionTask: async (id) => {
+    try {
+      await collectionTaskApi.delete(id);
+      set((state) => ({
+        collectionTasks: state.collectionTasks.filter((t) => t.id !== id),
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '删除采集任务失败' });
+      throw error;
+    }
   },
-  deleteDataset: (id) => {
-    set((state) => ({
-      datasets: state.datasets.filter((d) => d.id !== id),
-    }));
+  
+  // 数据集
+  loadDatasets: async () => {
+    set({ loading: true, error: null });
+    try {
+      const data = await datasetApi.getAll();
+      set({ datasets: data, loading: false });
+    } catch (error: any) {
+      set({ error: error.message || '加载数据集失败', loading: false });
+    }
   },
-  addDatasetVersion: (datasetId, version) => {
-    set((state) => ({
-      datasets: state.datasets.map((d) =>
-        d.id === datasetId
-          ? {
-              ...d,
-              versions: [
-                ...d.versions,
-                { ...version, createdAt: new Date().toISOString() },
-              ],
-            }
-          : d
-      ),
-    }));
+  addDataset: async (dataset) => {
+    try {
+      const newDataset = await datasetApi.create(dataset);
+      set((state) => ({
+        datasets: [...state.datasets, newDataset],
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '创建数据集失败' });
+      throw error;
+    }
+  },
+  updateDataset: async (id, dataset) => {
+    try {
+      const updated = await datasetApi.update(id, dataset);
+      set((state) => ({
+        datasets: state.datasets.map((d) => (d.id === id ? updated : d)),
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '更新数据集失败' });
+      throw error;
+    }
+  },
+  deleteDataset: async (id) => {
+    try {
+      await datasetApi.delete(id);
+      set((state) => ({
+        datasets: state.datasets.filter((d) => d.id !== id),
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '删除数据集失败' });
+      throw error;
+    }
+  },
+  addDatasetVersion: async (datasetId, version) => {
+    try {
+      const newVersion = await datasetApi.addVersion(datasetId, version);
+      set((state) => ({
+        datasets: state.datasets.map((d) =>
+          d.id === datasetId
+            ? {
+                ...d,
+                versions: [...d.versions, newVersion],
+              }
+            : d
+        ),
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '添加数据集版本失败' });
+      throw error;
+    }
   },
 }));
 

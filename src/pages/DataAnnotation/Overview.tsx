@@ -85,7 +85,7 @@ const Overview: React.FC = () => {
           <Progress
             percent={Math.round(progress)}
             size="small"
-            format={(percent) => `${record.completedTasks}/${record.totalTasks}`}
+            format={() => `${record.completedTasks}/${record.totalTasks}`}
           />
         );
       },

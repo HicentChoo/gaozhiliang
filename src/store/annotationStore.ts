@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { labelTemplateApi, annotationProjectApi, annotationTaskApi } from './annotationStore.api';
 
 // 标注任务类型 - 扩展版本，包含更多类型
 export type AnnotationTaskType =
@@ -564,8 +565,8 @@ interface AnnotationState {
   getTaskResults: (taskId: string) => AnnotationResult[];
 }
 
-// 演示数据
-const mockLabelTemplates: LabelTemplate[] = [
+// 注释掉演示数据，改用API
+// const mockLabelTemplates: LabelTemplate[] = [
   {
     id: 'lt1',
     name: '情感分析标签模板',
@@ -696,7 +697,7 @@ const mockProjects: AnnotationProject[] = [
     updatedAt: '2024-02-12T09:15:00Z',
   },
 ];
-
+*/
 const mockTasks: AnnotationTask[] = [
   {
     id: 't1',
@@ -754,7 +755,7 @@ const mockTasks: AnnotationTask[] = [
     updatedAt: '2024-02-11T15:30:00Z',
   },
 ];
-
+*/
 const mockResults: AnnotationResult[] = [
   {
     id: 'r1',
@@ -791,12 +792,55 @@ const mockResults: AnnotationResult[] = [
     createdAt: '2024-02-06T09:30:00Z',
   },
 ];
+*/
 
 export const useAnnotationStore = create<AnnotationState>((set, get) => ({
-  projects: mockProjects,
-  tasks: mockTasks,
-  results: mockResults,
-  labelTemplates: mockLabelTemplates,
+  projects: [],
+  tasks: [],
+  results: [],
+  labelTemplates: [],
+  loading: false,
+  error: null,
+  
+  loadLabelTemplates: async (taskType?: string) => {
+    set({ loading: true, error: null });
+    try {
+      const data = await labelTemplateApi.getAll(taskType);
+      set({ labelTemplates: data, loading: false });
+    } catch (error: any) {
+      set({ error: error.message || '加载标签模板失败', loading: false });
+    }
+  },
+  
+  loadProjects: async () => {
+    set({ loading: true, error: null });
+    try {
+      const data = await annotationProjectApi.getAll();
+      set({ projects: data, loading: false });
+    } catch (error: any) {
+      set({ error: error.message || '加载项目失败', loading: false });
+    }
+  },
+  
+  loadTasks: async (params?: { projectId?: string; status?: string; assigneeId?: string; reviewerId?: string }) => {
+    set({ loading: true, error: null });
+    try {
+      const data = await annotationTaskApi.getAll(params);
+      set({ tasks: data, loading: false });
+    } catch (error: any) {
+      set({ error: error.message || '加载任务失败', loading: false });
+    }
+  },
+  
+  loadResults: async (taskId: string) => {
+    set({ loading: true, error: null });
+    try {
+      const data = await annotationTaskApi.getResults(taskId);
+      set({ results: data, loading: false });
+    } catch (error: any) {
+      set({ error: error.message || '加载结果失败', loading: false });
+    }
+  },
   
   addProject: (project) => {
     const newProject: AnnotationProject = {
@@ -862,79 +906,53 @@ export const useAnnotationStore = create<AnnotationState>((set, get) => ({
     }));
   },
   
-  addTask: (task) => {
-    const newTask: AnnotationTask = {
-      ...task,
-      id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9),
-      annotations: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    set((state) => ({
-      tasks: [...state.tasks, newTask],
-    }));
-    
-    // 更新项目统计
-    const project = get().projects.find((p) => p.id === task.projectId);
-    if (project) {
-      get().updateProject(project.id, {});
+  addTask: async (task) => {
+    try {
+      const newTask = await annotationTaskApi.create(task);
+      set((state) => ({
+        tasks: [...state.tasks, newTask],
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '创建任务失败' });
+      throw error;
     }
   },
   
-  addTasks: (tasks) => {
-    const newTasks: AnnotationTask[] = tasks.map((task) => ({
-      ...task,
-      id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9),
-      annotations: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }));
-    set((state) => ({
-      tasks: [...state.tasks, ...newTasks],
-    }));
-    
-    // 更新项目统计
-    if (tasks.length > 0) {
-      const projectId = tasks[0].projectId;
-      const project = get().projects.find((p) => p.id === projectId);
-      if (project) {
-        get().updateProject(project.id, {});
-      }
+  addTasks: async (tasks) => {
+    try {
+      // 批量创建任务，逐个调用API
+      const newTasks = await Promise.all(tasks.map((task) => annotationTaskApi.create(task)));
+      set((state) => ({
+        tasks: [...state.tasks, ...newTasks],
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '批量创建任务失败' });
+      throw error;
     }
   },
   
-  updateTask: (id, task) => {
-    set((state) => ({
-      tasks: state.tasks.map((t) =>
-        t.id === id
-          ? { ...t, ...task, updatedAt: new Date().toISOString() }
-          : t
-      ),
-    }));
-    
-    // 更新项目统计
-    const updatedTask = get().tasks.find((t) => t.id === id);
-    if (updatedTask) {
-      const project = get().projects.find((p) => p.id === updatedTask.projectId);
-      if (project) {
-        get().updateProject(project.id, {});
-      }
+  updateTask: async (id, task) => {
+    try {
+      const updated = await annotationTaskApi.update(id, task);
+      set((state) => ({
+        tasks: state.tasks.map((t) => (t.id === id ? updated : t)),
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '更新任务失败' });
+      throw error;
     }
   },
   
-  deleteTask: (id) => {
-    const task = get().tasks.find((t) => t.id === id);
-    set((state) => ({
-      tasks: state.tasks.filter((t) => t.id !== id),
-      results: state.results.filter((r) => r.taskId !== id),
-    }));
-    
-    // 更新项目统计
-    if (task) {
-      const project = get().projects.find((p) => p.id === task.projectId);
-      if (project) {
-        get().updateProject(project.id, {});
-      }
+  deleteTask: async (id) => {
+    try {
+      await annotationTaskApi.delete(id);
+      set((state) => ({
+        tasks: state.tasks.filter((t) => t.id !== id),
+        results: state.results.filter((r) => r.taskId !== id),
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '删除任务失败' });
+      throw error;
     }
   },
   
@@ -986,32 +1004,49 @@ export const useAnnotationStore = create<AnnotationState>((set, get) => ({
     }
   },
   
-  addLabelTemplate: (template) => {
-    const newTemplate: LabelTemplate = {
-      ...template,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    set((state) => ({
-      labelTemplates: [...state.labelTemplates, newTemplate],
-    }));
+  addLabelTemplate: async (template) => {
+    try {
+      // 后端API使用taskType字段，前端使用type字段，需要转换
+      const newTemplate = await labelTemplateApi.create({
+        ...template,
+        taskType: template.type,
+      } as any);
+      set((state) => ({
+        labelTemplates: [...state.labelTemplates, newTemplate],
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '创建标签模板失败' });
+      throw error;
+    }
   },
   
-  updateLabelTemplate: (id, template) => {
-    set((state) => ({
-      labelTemplates: state.labelTemplates.map((t) =>
-        t.id === id
-          ? { ...t, ...template, updatedAt: new Date().toISOString() }
-          : t
-      ),
-    }));
+  updateLabelTemplate: async (id, template) => {
+    try {
+      // 后端API使用taskType字段，前端使用type字段，需要转换
+      const updateData: any = { ...template };
+      if (template.type) {
+        updateData.taskType = template.type;
+      }
+      const updated = await labelTemplateApi.update(id, updateData);
+      set((state) => ({
+        labelTemplates: state.labelTemplates.map((t) => (t.id === id ? updated : t)),
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '更新标签模板失败' });
+      throw error;
+    }
   },
   
-  deleteLabelTemplate: (id) => {
-    set((state) => ({
-      labelTemplates: state.labelTemplates.filter((t) => t.id !== id),
-    }));
+  deleteLabelTemplate: async (id) => {
+    try {
+      await labelTemplateApi.delete(id);
+      set((state) => ({
+        labelTemplates: state.labelTemplates.filter((t) => t.id !== id),
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '删除标签模板失败' });
+      throw error;
+    }
   },
   
   getProjectTasks: (projectId) => {

@@ -13,7 +13,6 @@ import {
 } from 'antd';
 import {
   PlusOutlined,
-  EditOutlined,
   DeleteOutlined,
   EyeOutlined,
   PlayCircleOutlined,
@@ -130,7 +129,7 @@ const Projects: React.FC = () => {
           <Progress
             percent={Math.round(progress)}
             size="small"
-            format={(percent) => `${record.completedTasks}/${record.totalTasks}`}
+            format={() => `${record.completedTasks}/${record.totalTasks}`}
           />
         );
       },

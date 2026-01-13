@@ -1,7 +1,12 @@
 import axios from 'axios';
 
+// 根据环境变量设置API baseURL
+// 开发环境：直接连接后端服务器
+// 生产环境：可以通过代理或使用完整URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE_URL,
   timeout: 10000,
 });
 

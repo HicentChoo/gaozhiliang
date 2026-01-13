@@ -6,7 +6,6 @@ import {
   Modal,
   Form,
   Input,
-  Select,
   Space,
   Tag,
   message,
@@ -253,26 +252,23 @@ const LabelTemplates: React.FC = () => {
             <Cascader
               options={taskTypeCascaderOptions}
               placeholder="请选择任务类型（先选大类，再选具体类型）"
-              showSearch={{
-                filter: (inputValue, path) => {
-                  return path.some(
-                    (option) =>
-                      option.label?.toString().toLowerCase().includes(inputValue.toLowerCase()) ||
-                      (typeof option.label === 'object' &&
-                        option.label?.props?.children?.props?.children
-                          ?.toLowerCase()
-                          .includes(inputValue.toLowerCase()))
-                  );
-                },
-              }}
-              displayRender={(labels, selectedOptions) => {
-                if (selectedOptions && selectedOptions.length > 0) {
-                  const lastOption = selectedOptions[selectedOptions.length - 1];
-                  const taskType = lastOption.value as AnnotationTaskType;
-                  return TASK_TYPE_MAP[taskType] || taskType;
-                }
-                return labels.join(' / ');
-              }}
+            showSearch={{
+              filter: (inputValue, path) => {
+                const keyword = inputValue.toLowerCase();
+                return path.some((option) => {
+                  const text = String(option.value || option.label || '').toLowerCase();
+                  return text.includes(keyword);
+                });
+              },
+            }}
+            displayRender={(labels, selectedOptions) => {
+              if (selectedOptions && selectedOptions.length > 0) {
+                const lastOption = selectedOptions[selectedOptions.length - 1];
+                const taskType = lastOption.value as AnnotationTaskType;
+                return TASK_TYPE_MAP[taskType] || taskType;
+              }
+              return labels.join(' / ');
+            }}
               changeOnSelect={false}
               style={{ width: '100%' }}
             />
@@ -291,7 +287,7 @@ const LabelTemplates: React.FC = () => {
             <Form.List name="labels">
               {(fields, { add, remove }) => (
                 <>
-                  {fields.map((field, index) => (
+                  {fields.map((field) => (
                     <Space key={field.key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
                       <Form.Item
                         {...field}

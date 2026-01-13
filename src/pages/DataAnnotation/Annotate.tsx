@@ -12,7 +12,6 @@ import {
   Progress,
   Divider,
   Alert,
-  Slider,
   Image,
   List,
   Avatar,
@@ -22,10 +21,8 @@ import {
   ArrowRightOutlined,
   SaveOutlined,
   CheckCircleOutlined,
-  HighlightOutlined,
 } from '@ant-design/icons';
 import { useAnnotationStore } from '../../store/annotationStore';
-import { useDataStore } from '../../store/dataStore';
 import { useAuthStore } from '../../store/authStore';
 import type { LabelResult } from '../../store/annotationStore';
 
@@ -35,7 +32,6 @@ const Annotate: React.FC = () => {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
   const { tasks, projects, labelTemplates, addResult, updateTask } = useAnnotationStore();
-  const { datasets, datasets: allDatasets } = useDataStore();
   const { user } = useAuthStore();
 
   const task = tasks.find((t) => t.id === taskId);
@@ -43,10 +39,6 @@ const Annotate: React.FC = () => {
   const template = project
     ? labelTemplates.find((t) => t.id === project.labelTemplateId)
     : null;
-  const dataset = project
-    ? allDatasets.find((d) => d.id === project.datasetId)
-    : null;
-
   const [selectedLabels, setSelectedLabels] = useState<LabelResult[]>([]);
   const [customText, setCustomText] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -102,7 +94,7 @@ const Annotate: React.FC = () => {
   
   // 添加序列标注
   const handleAddSequenceAnnotation = (labelId: string) => {
-    if (!selectedText || !labelId) {
+    if (!selectedText || !labelId || !template) {
       message.warning('请先选择文本和标签');
       return;
     }
@@ -160,7 +152,7 @@ const Annotate: React.FC = () => {
       }
       
       // 添加标注的文本
-      const label = template.labels.find((l) => l.id === ann.labelId);
+      const label = template?.labels.find((l) => l.id === ann.labelId);
       parts.push({
         text: text.substring(ann.start, ann.end),
         label: ann.labelName,
@@ -258,6 +250,7 @@ const Annotate: React.FC = () => {
   const sampleData = getSampleData();
 
   const handleLabelChange = (labelId: string, checked: boolean) => {
+    if (!template) return;
     const label = template.labels.find((l) => l.id === labelId);
     if (!label) return;
 
@@ -617,13 +610,16 @@ const Annotate: React.FC = () => {
                 value={selectedLabels.filter((l) => l.labelName !== 'quality').map((l) => l.value)}
                 onChange={(checkedValues) => {
                   const qualityLabel = selectedLabels.find((l) => l.labelName === 'quality');
-                  const newLabels = (checkedValues as string[]).map((value) => ({
-                    labelId: value,
-                    labelName: value,
-                    value: value,
-                  }));
+                const newLabels: LabelResult[] = (checkedValues as string[]).map((value) => ({
+                  labelId: value,
+                  labelName: value,
+                  value,
+                }));
                   if (qualityLabel) {
-                    newLabels.push(qualityLabel);
+                  newLabels.push({
+                    ...qualityLabel,
+                    value: String(qualityLabel.value ?? ''),
+                  });
                   }
                   setSelectedLabels(newLabels);
                 }}

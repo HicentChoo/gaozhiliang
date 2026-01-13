@@ -15,14 +15,7 @@ import {
   Tooltip,
   Alert,
 } from 'antd';
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  PlayCircleOutlined,
-  InfoCircleOutlined,
-  EyeOutlined,
-} from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, PlayCircleOutlined, EyeOutlined } from '@ant-design/icons';
 import { useEnhancementStore, type EnhancementTask } from '../../store/enhancementStore';
 import { useDataStore } from '../../store/dataStore';
 import { useToolboxStore } from '../../store/toolboxStore';
@@ -435,9 +428,9 @@ const DataEnhancement: React.FC = () => {
             <Select
               placeholder="请选择数据集"
               showSearch
-              filterOption={(input, option) =>
-                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-              }
+            filterOption={(input, option) =>
+              String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+            }
             >
               {datasets.map((dataset) => (
                 <Select.Option key={dataset.id} value={dataset.id} label={dataset.name}>
@@ -455,9 +448,9 @@ const DataEnhancement: React.FC = () => {
             <Select
               placeholder="请选择增强方式"
               showSearch
-              filterOption={(input, option) =>
-                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-              }
+            filterOption={(input, option) =>
+              String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+            }
             >
               {availableSceneConfigs.map((config) => {
                 const model = models.find((m) => m.id === config.modelId);

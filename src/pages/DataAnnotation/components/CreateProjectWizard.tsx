@@ -7,11 +7,9 @@ import {
   Select,
   Radio,
   Button,
-  Space,
   message,
   Checkbox,
   Card,
-  Tag,
   Divider,
   Cascader,
   Tooltip,
@@ -21,18 +19,11 @@ import {
   DatabaseOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
-import {
-  useAnnotationStore,
-  type AnnotationTaskType,
-  TASK_TYPE_CATEGORIES,
-  TASK_TYPE_MAP,
-} from '../../../store/annotationStore';
+import { useAnnotationStore, type AnnotationTaskType, TASK_TYPE_CATEGORIES, TASK_TYPE_MAP } from '../../../store/annotationStore';
 import { useDataStore } from '../../../store/dataStore';
 import { useAuthStore } from '../../../store/authStore';
-import type { LabelTemplate } from '../../../store/annotationStore';
 
 const { TextArea } = Input;
-const { Step } = Steps;
 
 interface CreateProjectWizardProps {
   visible: boolean;
@@ -47,8 +38,8 @@ const CreateProjectWizard: React.FC<CreateProjectWizardProps> = ({
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [form] = Form.useForm();
-  const { addProject, addTasks, labelTemplates, projects } = useAnnotationStore();
-  const { datasets, datasets: allDatasets } = useDataStore();
+  const { addProject, addTasks, labelTemplates } = useAnnotationStore();
+  const { datasets: allDatasets } = useDataStore();
   const { user } = useAuthStore();
 
   // 将任务类型分类转换为 Cascader 的 options 格式
@@ -103,14 +94,11 @@ const CreateProjectWizard: React.FC<CreateProjectWizardProps> = ({
           placeholder="请选择任务类型（先选大类，再选具体类型）"
           showSearch={{
             filter: (inputValue, path) => {
-              return path.some(
-                (option) =>
-                  option.label?.toString().toLowerCase().includes(inputValue.toLowerCase()) ||
-                  (typeof option.label === 'object' &&
-                    option.label?.props?.children?.props?.children
-                      ?.toLowerCase()
-                      .includes(inputValue.toLowerCase()))
-              );
+              const keyword = inputValue.toLowerCase();
+              return path.some((option) => {
+                const text = String(option.value || option.label || '').toLowerCase();
+                return text.includes(keyword);
+              });
             },
           }}
           displayRender={(labels, selectedOptions) => {
@@ -122,7 +110,7 @@ const CreateProjectWizard: React.FC<CreateProjectWizardProps> = ({
             return labels.join(' / ');
           }}
           changeOnSelect={false}
-          onChange={(value) => {
+          onChange={() => {
             // 当任务类型改变时，清空已选择的标签模板
             form.setFieldsValue({ labelTemplateId: undefined });
           }}
@@ -148,7 +136,7 @@ const CreateProjectWizard: React.FC<CreateProjectWizardProps> = ({
             placeholder="请选择数据集"
             showSearch
             filterOption={(input, option) =>
-              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
             }
           >
             {allDatasets.map((dataset) => (
@@ -381,9 +369,6 @@ const CreateProjectWizard: React.FC<CreateProjectWizardProps> = ({
         },
       };
 
-      // 创建项目前的项目数量
-      const beforeCount = useAnnotationStore.getState().projects.length;
-      
       // 创建项目
       addProject(project);
       
@@ -463,11 +448,14 @@ const CreateProjectWizard: React.FC<CreateProjectWizardProps> = ({
         </Button>,
       ]}
     >
-      <Steps current={currentStep} style={{ marginBottom: 32 }}>
-        {steps.map((step, index) => (
-          <Step key={index} title={step.title} icon={step.icon} />
-        ))}
-      </Steps>
+      <Steps
+        current={currentStep}
+        style={{ marginBottom: 32 }}
+        items={steps.map((step) => ({
+          title: step.title,
+          icon: step.icon,
+        }))}
+      />
 
       <div style={{ minHeight: 400 }}>{steps[currentStep].content}</div>
     </Modal>

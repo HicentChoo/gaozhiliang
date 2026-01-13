@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { enhancementTaskApi } from './enhancementStore.api';
 
 export interface EnhancementTask {
   id: string;
@@ -15,9 +16,12 @@ export interface EnhancementTask {
 
 interface EnhancementState {
   tasks: EnhancementTask[];
-  addTask: (task: Omit<EnhancementTask, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateTask: (id: string, task: Partial<EnhancementTask>) => void;
-  deleteTask: (id: string) => void;
+  loading: boolean;
+  error: string | null;
+  loadTasks: () => Promise<void>;
+  addTask: (task: Omit<EnhancementTask, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateTask: (id: string, task: Partial<EnhancementTask>) => Promise<void>;
+  deleteTask: (id: string) => Promise<void>;
 }
 
 // 演示数据
@@ -57,31 +61,54 @@ const mockEnhancementTasks: EnhancementTask[] = [
 ];
 
 export const useEnhancementStore = create<EnhancementState>((set) => ({
-  tasks: mockEnhancementTasks,
-  addTask: (task) => {
-    const newTask: EnhancementTask = {
-      ...task,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    set((state) => ({
-      tasks: [...state.tasks, newTask],
-    }));
+  tasks: [],
+  loading: false,
+  error: null,
+  
+  loadTasks: async () => {
+    set({ loading: true, error: null });
+    try {
+      const data = await enhancementTaskApi.getAll();
+      set({ tasks: data, loading: false });
+    } catch (error: any) {
+      set({ error: error.message || '加载增强任务失败', loading: false });
+    }
   },
-  updateTask: (id, task) => {
-    set((state) => ({
-      tasks: state.tasks.map((t) =>
-        t.id === id
-          ? { ...t, ...task, updatedAt: new Date().toISOString() }
-          : t
-      ),
-    }));
+  
+  addTask: async (task) => {
+    try {
+      const newTask = await enhancementTaskApi.create(task);
+      set((state) => ({
+        tasks: [...state.tasks, newTask],
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '创建增强任务失败' });
+      throw error;
+    }
   },
-  deleteTask: (id) => {
-    set((state) => ({
-      tasks: state.tasks.filter((t) => t.id !== id),
-    }));
+  
+  updateTask: async (id, task) => {
+    try {
+      const updated = await enhancementTaskApi.update(id, task);
+      set((state) => ({
+        tasks: state.tasks.map((t) => (t.id === id ? updated : t)),
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '更新增强任务失败' });
+      throw error;
+    }
+  },
+  
+  deleteTask: async (id) => {
+    try {
+      await enhancementTaskApi.delete(id);
+      set((state) => ({
+        tasks: state.tasks.filter((t) => t.id !== id),
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '删除增强任务失败' });
+      throw error;
+    }
   },
 }));
 

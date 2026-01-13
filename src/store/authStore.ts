@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import api from '../api';
 
 export interface User {
   id: string;
@@ -17,34 +18,30 @@ interface AuthState {
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
   setUser: (user: User) => void;
-  updateUser: (updates: Partial<User>) => void;
+  updateUser: (updates: Partial<User>) => Promise<void>;
   updatePassword: (oldPassword: string, newPassword: string) => Promise<void>;
+  fetchUser: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       token: null,
       isAuthenticated: false,
-      login: async (username: string, _password: string) => {
-        // 模拟登录API调用
-        // 实际应该调用真实API
-        const mockUser: User = {
-          id: '1',
-          username,
-          email: `${username}@example.com`,
-          role: username === 'admin' ? 'admin' : 'user',
-          avatar: username === 'admin' 
-            ? 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin&backgroundColor=b6e3f4,c0aede,d1d4f9'
-            : undefined,
-        };
-        const mockToken = 'mock_token_' + Date.now();
-        set({
-          user: mockUser,
-          token: mockToken,
-          isAuthenticated: true,
-        });
+      login: async (username: string, password: string) => {
+        try {
+          const response = await api.post('/auth/login', { username, password });
+          const { token, user } = response;
+          set({
+            user,
+            token,
+            isAuthenticated: true,
+          });
+        } catch (error: any) {
+          const errorMessage = error.response?.data?.error || error.message || '登录失败';
+          throw new Error(errorMessage);
+        }
       },
       logout: () => {
         set({
@@ -56,15 +53,37 @@ export const useAuthStore = create<AuthState>()(
       setUser: (user: User) => {
         set({ user });
       },
-      updateUser: (updates: Partial<User>) => {
-        set((state) => ({
-          user: state.user ? { ...state.user, ...updates } : null,
-        }));
+      updateUser: async (updates: Partial<User>) => {
+        try {
+          const response = await api.put('/auth/profile', updates);
+          const { user } = response;
+          set({ user });
+        } catch (error: any) {
+          const errorMessage = error.response?.data?.error || error.message || '更新用户信息失败';
+          throw new Error(errorMessage);
+        }
       },
-      updatePassword: async (_oldPassword: string, _newPassword: string) => {
-        // 模拟更新密码API调用
-        // 实际应该调用真实API
-        return Promise.resolve();
+      updatePassword: async (oldPassword: string, newPassword: string) => {
+        try {
+          await api.put('/auth/password', { oldPassword, newPassword });
+        } catch (error: any) {
+          const errorMessage = error.response?.data?.error || error.message || '修改密码失败';
+          throw new Error(errorMessage);
+        }
+      },
+      fetchUser: async () => {
+        try {
+          const response = await api.get('/auth/me');
+          const { user } = response;
+          set({ user });
+        } catch (error: any) {
+          // 如果获取用户信息失败，清除认证状态
+          set({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+          });
+        }
       },
     }),
     {

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { modelApi, sceneConfigApi } from './toolboxStore.api';
 
 // 模型管理接口
 export interface Model {
@@ -30,12 +31,16 @@ export interface SceneConfig {
 interface ToolboxState {
   models: Model[];
   sceneConfigs: SceneConfig[];
-  addModel: (model: Omit<Model, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateModel: (id: string, model: Partial<Model>) => void;
-  deleteModel: (id: string) => void;
-  addSceneConfig: (config: Omit<SceneConfig, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateSceneConfig: (id: string, config: Partial<SceneConfig>) => void;
-  deleteSceneConfig: (id: string) => void;
+  loading: boolean;
+  error: string | null;
+  loadModels: () => Promise<void>;
+  loadSceneConfigs: () => Promise<void>;
+  addModel: (model: Omit<Model, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateModel: (id: string, model: Partial<Model>) => Promise<void>;
+  deleteModel: (id: string) => Promise<void>;
+  addSceneConfig: (config: Omit<SceneConfig, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateSceneConfig: (id: string, config: Partial<SceneConfig>) => Promise<void>;
+  deleteSceneConfig: (id: string) => Promise<void>;
 }
 
 // 演示数据
@@ -127,59 +132,103 @@ const mockSceneConfigs: SceneConfig[] = [
 ];
 
 export const useToolboxStore = create<ToolboxState>((set) => ({
-  models: mockModels,
-  sceneConfigs: mockSceneConfigs,
-  addModel: (model) => {
-    const newModel: Model = {
-      ...model,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    set((state) => ({
-      models: [...state.models, newModel],
-    }));
+  models: [],
+  sceneConfigs: [],
+  loading: false,
+  error: null,
+  
+  loadModels: async () => {
+    set({ loading: true, error: null });
+    try {
+      const data = await modelApi.getAll();
+      set({ models: data, loading: false });
+    } catch (error: any) {
+      set({ error: error.message || '加载模型失败', loading: false });
+    }
   },
-  updateModel: (id, model) => {
-    set((state) => ({
-      models: state.models.map((m) =>
-        m.id === id
-          ? { ...m, ...model, updatedAt: new Date().toISOString() }
-          : m
-      ),
-    }));
+  
+  loadSceneConfigs: async () => {
+    set({ loading: true, error: null });
+    try {
+      const data = await sceneConfigApi.getAll();
+      set({ sceneConfigs: data, loading: false });
+    } catch (error: any) {
+      set({ error: error.message || '加载场景配置失败', loading: false });
+    }
   },
-  deleteModel: (id) => {
-    set((state) => ({
-      models: state.models.filter((m) => m.id !== id),
-      // 删除模型时，同时删除关联的场景配置
-      sceneConfigs: state.sceneConfigs.filter((c) => c.modelId !== id),
-    }));
+  
+  addModel: async (model) => {
+    try {
+      const newModel = await modelApi.create(model);
+      set((state) => ({
+        models: [...state.models, newModel],
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '创建模型失败' });
+      throw error;
+    }
   },
-  addSceneConfig: (config) => {
-    const newConfig: SceneConfig = {
-      ...config,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    set((state) => ({
-      sceneConfigs: [...state.sceneConfigs, newConfig],
-    }));
+  
+  updateModel: async (id, model) => {
+    try {
+      const updated = await modelApi.update(id, model);
+      set((state) => ({
+        models: state.models.map((m) => (m.id === id ? updated : m)),
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '更新模型失败' });
+      throw error;
+    }
   },
-  updateSceneConfig: (id, config) => {
-    set((state) => ({
-      sceneConfigs: state.sceneConfigs.map((c) =>
-        c.id === id
-          ? { ...c, ...config, updatedAt: new Date().toISOString() }
-          : c
-      ),
-    }));
+  
+  deleteModel: async (id) => {
+    try {
+      await modelApi.delete(id);
+      set((state) => ({
+        models: state.models.filter((m) => m.id !== id),
+        // 删除模型时，同时删除关联的场景配置
+        sceneConfigs: state.sceneConfigs.filter((c) => c.modelId !== id),
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '删除模型失败' });
+      throw error;
+    }
   },
-  deleteSceneConfig: (id) => {
-    set((state) => ({
-      sceneConfigs: state.sceneConfigs.filter((c) => c.id !== id),
-    }));
+  
+  addSceneConfig: async (config) => {
+    try {
+      const newConfig = await sceneConfigApi.create(config);
+      set((state) => ({
+        sceneConfigs: [...state.sceneConfigs, newConfig],
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '创建场景配置失败' });
+      throw error;
+    }
+  },
+  
+  updateSceneConfig: async (id, config) => {
+    try {
+      const updated = await sceneConfigApi.update(id, config);
+      set((state) => ({
+        sceneConfigs: state.sceneConfigs.map((c) => (c.id === id ? updated : c)),
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '更新场景配置失败' });
+      throw error;
+    }
+  },
+  
+  deleteSceneConfig: async (id) => {
+    try {
+      await sceneConfigApi.delete(id);
+      set((state) => ({
+        sceneConfigs: state.sceneConfigs.filter((c) => c.id !== id),
+      }));
+    } catch (error: any) {
+      set({ error: error.message || '删除场景配置失败' });
+      throw error;
+    }
   },
 }));
 
