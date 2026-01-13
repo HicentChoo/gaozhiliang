@@ -41,7 +41,7 @@ try {
 }
 
 // 健康检查
-app.get('/health', (req, res) => {
+app.get('/health', (req: express.Request, res: express.Response) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
@@ -58,7 +58,7 @@ app.use('/api/scene-configs', sceneConfigRoutes);
 app.use('/api/enhancement-tasks', enhancementTaskRoutes);
 
 // 404处理
-app.use((req, res) => {
+app.use((req: express.Request, res: express.Response) => {
   res.status(404).json({ error: '接口不存在' });
 });
 
